@@ -1,0 +1,25 @@
+robot2/robot2:
+    ekf_filter_node:
+      ros__parameters:
+        frequency: 30.0
+        sensor_timeout: 0.1
+        two_d_mode: true
+        publish_tf: true
+
+        # === CORREZIONE CHIAVE: Specifica i frame di output ===
+        # Questi sono i nomi dei frame che L'EKF PUBBLICHERA'
+        map_frame: robot2/robot2/map
+        odom_frame: robot2/robot2/odom
+        base_link_frame: robot2/robot2/base_footprint
+        world_frame: robot2/robot2/odom
+
+        # === CORREZIONE CHIAVE: Specifica il frame di input ===
+        # Questo dice all'EKF che il messaggio in arrivo su 'odom0'
+        # avrà 'odom' come frame_id
+        odom0: /robot2/robot2/odom  # in questo modo si iscrive al topic /robot2/robot2/odom
+        odom0_config: [true,  true,  false, false, false, true, true,  true,  false, false, false, true, false, false, false]
+
+        
+        # Anche per l'IMU è buona norma specificare il frame
+        imu0: /robot2/robot2/imu # in questo modo si iscrive al topic /robot2/robot2/imu
+        imu0_config: [false, false, false, true,  true,  true, false, false, false, true,  true,  true, true,  true,  true]
