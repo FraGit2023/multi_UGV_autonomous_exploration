@@ -1,0 +1,329 @@
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, GroupAction,
+                            IncludeLaunchDescription)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.actions import Node, PushRosNamespace
+from launch.substitutions import LaunchConfiguration
+from launch.substitutions import PythonExpression
+
+
+
+
+def generate_launch_description():
+    # --- Percorsi dei Pacchetti e dei File ---
+    pkg_turtlebot3_gazebo = get_package_share_directory('turtlebot3_gazebo')
+    pkg_ros_gz_sim = get_package_share_directory('ros_gz_sim')
+    pkg_explorer = get_package_share_directory('turtlebot3_autonomous_exploration')
+    pkg_slam_toolbox = get_package_share_directory('slam_toolbox')
+
+    # Percorsi ai nuovi file di configurazione hardcodati
+    ekf_params_file_robot1 = os.path.join(pkg_explorer, 'config', 'ekf_robot1.yaml')
+    slam_params_file_robot1 = os.path.join(pkg_explorer, 'config', 'slam_robot1.yaml')
+    nav2_params_file_robot1 = os.path.join(pkg_explorer, 'config', 'nav2_robot1.yaml') # con questo ho il doppio namespace per il robot1
+    
+    ekf_params_file_robot2 = os.path.join(pkg_explorer, 'config', 'ekf_robot2.yaml')
+    slam_params_file_robot2 = os.path.join(pkg_explorer, 'config', 'slam_robot2.yaml')
+    nav2_params_file_robot2 = os.path.join(pkg_explorer, 'config', 'nav2_robot2.yaml') 
+
+    config_path = os.path.join(pkg_explorer, 'config', 'robot_initial_positions.yaml')
+    
+    
+    # --- Dichiarazione degli Argomenti ---
+    declare_namespace_arg_r1 = DeclareLaunchArgument('namespace_r1', default_value='robot1')
+    declare_namespace_arg_r2 = DeclareLaunchArgument('namespace_r2', default_value='robot2')
+
+    declare_x_pose_arg_robot1 = DeclareLaunchArgument('x_pose_robot1', default_value='0.0')
+    declare_y_pose_arg_robot1 = DeclareLaunchArgument('y_pose_robot1', default_value='-0.5')
+
+    declare_x_pose_arg_robot2 = DeclareLaunchArgument('x_pose_robot2', default_value='5.0')
+    declare_y_pose_arg_robot2 = DeclareLaunchArgument('y_pose_robot2', default_value='-1.0')
+
+    declare_use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
+
+    # dichiarazione dei file di configurazione RViz per entrambe le istanze dei robot
+    declare_rviz_config_arg_v2 = DeclareLaunchArgument(
+        'rviz_config_path_v2',
+        default_value=os.path.join(pkg_explorer, 'rviz', 'tb3_multi_v2.rviz')
+    )
+
+    declare_rviz_config_arg_v2_robot2 = DeclareLaunchArgument(
+        'rviz_config_path_v2_robot2',
+        default_value=os.path.join(pkg_explorer, 'rviz', 'tb3_multi_v2_robot2.rviz')
+    )
+
+    declare_rviz_global_config_arg = DeclareLaunchArgument(
+        'rviz_global_config_path',
+        default_value=os.path.join(pkg_explorer, 'rviz', 'global_config.rviz')
+    )
+
+
+    # --- Avvio della Simulazione Gazebo ---
+    gz_sim_server = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
+        launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'custom_house.world')]}.items()
+        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage2.world')]}.items()
+        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage1.world')]}.items()
+    )   
+
+
+
+
+
+
+
+    # Commented in order to NOT start the gazebo client
+    # gz_sim_client = IncludeLaunchDescription(
+    #      PythonLaunchDescriptionSource(os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
+    #      launch_arguments={'gz_args': '-g'}.items()
+    #  )
+
+    # Bridge for the clock between ROS e Gazebo
+    # This allows the synchronization between ROS and Gazebo.
+    clock_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        output='screen'
+    )
+
+                                        # --- START ROBOT1 ARGUMENTS ---
+    robot1_group = GroupAction(
+        actions=[
+            PushRosNamespace(
+                PythonExpression(["'", "robot1","/", "robot1", "'"])
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_turtlebot3_gazebo, 'launch', 'spawn_turtlebot3.launch.py')),
+                launch_arguments={
+                    'namespace': 'robot1',
+                    'x_pose': LaunchConfiguration('x_pose_robot1'),
+                    'y_pose': LaunchConfiguration('y_pose_robot1'),
+                }.items()
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_turtlebot3_gazebo, 'launch', 'robot_state_publisher.launch.py')),
+                launch_arguments={
+                    'use_sim_time': LaunchConfiguration('use_sim_time'),
+                    'frame_prefix': PythonExpression(["'", "robot1","/", "robot1", "'"])
+                }.items()
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_slam_toolbox, 'launch', 'online_async_launch.py')),
+                launch_arguments={
+                    'use_sim_time': LaunchConfiguration('use_sim_time'),
+                    'slam_params_file': slam_params_file_robot1,
+                }.items(),
+            ),
+
+            Node(
+                package='robot_localization',
+                executable='ekf_node',
+                name='ekf_filter_node',
+                output='screen',
+                parameters=[ekf_params_file_robot1, {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+                remappings=[('/robot1/robot1/odometry/filtered', '/robot1/robot1/odom/filtered')]  # aggiunto per mappare i topic correttamente #TOCHECK
+            ),
+
+            # Node commented, but if you want to see what the robot1 does alone, you can decomment.
+
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     arguments=['-d', LaunchConfiguration('rviz_config_path_v2'), '-f', 'robot1/robot1/map'],
+            #     parameters=[
+            #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            #         {'tf_buffer_size': 100.0},
+            #         {'tf_buffer_cache_size': 100.0},
+            #         {'tf_buffer_duration': 100.0}
+            #     ],
+            #     output='screen'
+            # )
+        ]
+    )
+
+
+                                                # === START ROBOT2 ARGUMENTS ===
+    
+    robot2_group = GroupAction(
+        actions=[
+            PushRosNamespace(
+                PythonExpression(["'", "robot2","/", "robot2", "'"])
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_turtlebot3_gazebo, 'launch', 'spawn_turtlebot3_robot2.launch.py')),
+                launch_arguments={
+                    'namespace': 'robot2',
+                    'x_pose': LaunchConfiguration('x_pose_robot2'),
+                    'y_pose': LaunchConfiguration('y_pose_robot2'),
+                }.items()
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_turtlebot3_gazebo, 'launch', 'robot_state_publisher.launch.py')),
+                launch_arguments={
+                    'use_sim_time': LaunchConfiguration('use_sim_time'),
+                    'frame_prefix': PythonExpression(["'", "robot2","/", "robot2", "'"])
+                }.items()
+            ),
+
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(os.path.join(pkg_slam_toolbox, 'launch', 'online_async_launch.py')),
+                launch_arguments={
+                    'use_sim_time': LaunchConfiguration('use_sim_time'),
+                    'slam_params_file': slam_params_file_robot2,
+                }.items(),
+            ),
+
+            Node(
+                package='robot_localization',
+                executable='ekf_node',
+                name='ekf_filter_node',
+                output='screen',
+                parameters=[ekf_params_file_robot2, {'use_sim_time': LaunchConfiguration('use_sim_time')}],
+                remappings=[('/robot2/robot2/odometry/filtered', '/robot2/robot2/odom/filtered')]  
+            ),
+
+            # Node commented, but if you want to see what the robot2 does alone, you can decomment.
+
+            # Node(
+            #     package='rviz2',
+            #     executable='rviz2',
+            #     name='rviz2',
+            #     arguments=['-d', LaunchConfiguration('rviz_config_path_v2_robot2'), '-f', 'robot2/robot2/map'],
+            #     parameters=[
+            #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            #         {'tf_buffer_size': 100.0},
+            #         {'tf_buffer_cache_size': 100.0},
+            #         {'tf_buffer_duration': 100.0}
+            #     ],
+            #     output='screen'
+            # )
+        ]
+    )
+
+
+                                    # === Start Launches Nav2 for Robot1 and Robot2 ===
+        # This launches has to be separated because a single namespace applied became a double namespace.
+
+
+    nav2_robot1_namespaced = GroupAction(
+        actions=[
+            PushRosNamespace(
+                PythonExpression(["'","robot1","'"])
+            ),
+
+            IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(pkg_explorer, 'launch', 'navigation_robot1_launch.py')),
+            launch_arguments={
+                'use_sim_time': LaunchConfiguration('use_sim_time'),
+                'params_file': nav2_params_file_robot1,
+                'autostart': 'true', # Automatically starts the Nav2 nodes
+            }.items(),
+            ),
+        ]
+    )
+
+
+
+    nav2_robot2_namespaced = GroupAction(
+        actions=[
+            PushRosNamespace(
+                PythonExpression(["'","robot2","'"])
+            ),
+
+            IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(pkg_explorer, 'launch', 'navigation_robot2_launch.py')),
+            launch_arguments={
+                'use_sim_time': LaunchConfiguration('use_sim_time'),
+                'params_file': nav2_params_file_robot2,
+                'autostart': 'true', # Automatically starts the Nav2 nodes
+            }.items(),
+            ),
+        ]
+    )
+
+
+    global_frame_broad = Node(
+        package='turtlebot3_autonomous_exploration',
+        executable='global_frame_broad',
+        name='global_frame_broad',
+        output='screen',
+        parameters=[
+                {'robot_configs_path': config_path},
+                {'use_sim_time': True}
+            ]
+    )
+
+    global_map_merger_node = Node(
+        package='turtlebot3_autonomous_exploration',
+        executable='global_map_merger_node',
+        name='global_map_merger_node',
+        output='screen',
+        parameters=[
+                {'robot_namespaces': ['robot1', 'robot2']},
+                {'use_sim_time': True}
+            ]
+    )
+
+    global_frontier_detector_node = Node(
+        package='turtlebot3_autonomous_exploration',
+        executable='global_frontier_detector_node',
+        name='global_frontier_detector_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
+    greedy_task_allocator_node = Node(
+        package='turtlebot3_autonomous_exploration',
+        executable='greedy_task_allocator_node',
+        name='greedy_task_allocator_node',
+        output='screen',
+        parameters=[{'use_sim_time': True}]
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', LaunchConfiguration('rviz_global_config_path'), '-f', 'map'],
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
+                    {'tf_buffer_size': 100.0},
+                    {'tf_buffer_cache_size': 100.0},
+                    {'tf_buffer_duration': 100.0}
+                    ],
+    )
+
+    return LaunchDescription([
+        declare_namespace_arg_r1,
+        declare_namespace_arg_r2,
+        declare_x_pose_arg_robot1,
+        declare_y_pose_arg_robot1,
+        declare_x_pose_arg_robot2,
+        declare_y_pose_arg_robot2,
+        declare_use_sim_time_arg,
+        declare_rviz_config_arg_v2,
+        declare_rviz_config_arg_v2_robot2,
+        declare_rviz_global_config_arg,
+        gz_sim_server,
+        clock_bridge,
+        rviz_node,
+
+        # Avvio dei gruppi di azioni per i robot
+        #gz_sim_client,
+        global_frame_broad,                         
+        global_map_merger_node,                     
+        robot1_group,
+        robot2_group,
+        nav2_robot1_namespaced,
+        nav2_robot2_namespaced,
+        global_frontier_detector_node,
+        greedy_task_allocator_node
+                      
+    ])
