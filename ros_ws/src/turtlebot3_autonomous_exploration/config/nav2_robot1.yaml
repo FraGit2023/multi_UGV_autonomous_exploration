@@ -1,8 +1,8 @@
 robot1:
   bt_navigator:
     ros__parameters:
-      global_frame: robot1/robot1/map
-      robot_base_frame: robot1/robot1/base_link
+      global_frame: robot1/robot1/map     # NEWS
+      robot_base_frame: robot1/robot1/base_link # NEWS
       transform_tolerance: 0.5
       filter_duration: 0.3
       default_nav_to_pose_bt_xml: "$(find-pkg-share nav2_bt_navigator)/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml" # behavior trees location.
@@ -38,15 +38,15 @@ robot1:
       docks: ['home_dock','flex_dock1', 'flex_dock2']
       home_dock:
         type: 'nova_carter_dock'
-        frame: robot1/robot1/map
+        frame: robot1/robot1/map # NEWS
         pose: [0.0, 0.0, 0.0]
       flex_dock1:
         type: 'nova_carter_dock'
-        frame: robot1/robot1/map
+        frame: robot1/robot1/map # NEWS
         pose: [10.0, 10.0, 0.0]
       flex_dock2:
         type: 'nova_carter_dock'
-        frame: robot1/robot1/map
+        frame: robot1/robot1/map # NEWS
         pose: [30.0, 30.0, 0.0]
       enable_stamped_cmd_vel: true
 
@@ -68,11 +68,11 @@ robot1:
       goal_checker:
         plugin: "nav2_controller::SimpleGoalChecker"
         xy_goal_tolerance: 0.25
-        yaw_goal_tolerance: 6.28  # ~2π radianti = ignora orientamento
+        yaw_goal_tolerance: 6.28  # ~2π radianti = ignora orientamento nel raggiungimento del goal
         stateful: True
       FollowPath:
         plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-        # Aggiungi questa parte
+        # Aggiunta questa parte per l'errore legato a critics 
         critics:
         - "path_dist_critic"
         - "goal_checker_critic"
@@ -123,8 +123,8 @@ robot1:
       ros__parameters:
         update_frequency: 5.0
         publish_frequency: 2.0
-        global_frame: robot1/robot1/odom
-        robot_base_frame: robot1/robot1/base_link
+        global_frame: robot1/robot1/odom # NEWS
+        robot_base_frame: robot1/robot1/base_link # NEWS
         rolling_window: true
         width: 3
         height: 3
@@ -174,8 +174,8 @@ robot1:
       ros__parameters:
         update_frequency: 1.0
         publish_frequency: 1.0
-        global_frame: robot1/robot1/map
-        robot_base_frame: robot1/robot1/base_link
+        global_frame: robot1/robot1/map # NEWS
+        robot_base_frame: robot1/robot1/base_link # NEWS
         transform_tolerance: 0.5
         robot_radius: 0.1
         resolution: 0.01
@@ -186,7 +186,7 @@ robot1:
           enabled: true
           observation_sources: scan # TO CHECK THIS 
           scan:
-            topic: /robot1/robot1/scan     # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+            topic: /robot1/robot1/scan     # NEWS --> qui era /scan, ora è /robot1/robot1/scan . Il namespace verrà poi aggiunto automaticamente
             max_obstacle_height: 2.0
             clearing: true
             marking: true
@@ -206,7 +206,7 @@ robot1:
           mark_threshold: 0
           observation_sources: scan # TO CHECK THIS
           scan:
-            topic: /robot1/robot1/scan       # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+            topic: /robot1/robot1/scan       # NEWS --> qui era /scan, ora è /robot1/robot1/scan . Il namespace verrà poi aggiunto automaticamente
             max_obstacle_height: 2.0
             clearing: true
             marking: true
@@ -222,7 +222,7 @@ robot1:
         inflation_layer:
           plugin: "nav2_costmap_2d::InflationLayer"
           inflation_radius: 0.2
-          cost_scaling_factor: 3.0
+          cost_scaling_factor: 3.0 
         always_send_full_costmap: true
 
   planner_server:
@@ -253,9 +253,9 @@ robot1:
         plugin: "nav2_behaviors::Wait" # In Iron and older versions, "/" was used instead of "::"
       assisted_teleop:
         plugin: "nav2_behaviors::AssistedTeleop" # In Iron and older versions, "/" was used instead of "::"
-      local_frame: robot1/robot1/odom
-      global_frame: robot1/robot1/map
-      robot_base_frame: robot1/robot1/base_link
+      local_frame: robot1/robot1/odom # NEWS
+      global_frame: robot1/robot1/map # NEWS
+      robot_base_frame: robot1/robot1/base_link # NEWS
       transform_timeout: 0.1
       simulate_ahead_time: 2.0
       max_rotational_vel: 1.0
@@ -275,8 +275,8 @@ robot1:
 
   collision_monitor:
     ros__parameters:
-      base_frame_id: "robot1/robot1/base_footprint"
-      odom_frame_id: "robot1/robot1/odom"
+      base_frame_id: "robot1/robot1/base_footprint" # NEWS
+      odom_frame_id: "robot1/robot1/odom" # NEWS
       cmd_vel_in_topic: "cmd_vel_smoothed"   # qui teoricamente dovrebbe andare da solo il namespace : CONFERMO
       cmd_vel_out_topic: "cmd_vel"
       state_topic: "collision_monitor_state"
@@ -360,7 +360,7 @@ robot1:
       scan:
         source_timeout: 0.7
         type: "scan"      # TO CHECK THIS
-        topic: "/robot1/robot1/scan"     # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+        topic: "/robot1/robot1/scan"     # NEWS --> qui era /scan, ora è "/robot1/robot1/scan"  . Il namespace verrà poi aggiunto automaticamente
         enabled: true
 
   velocity_smoother:
