@@ -1,5 +1,3 @@
-# VERSIONE MODIFICATA CHE UNISCE MAPPE E ANCHE LE COSTMAPE DI PIU' ROBOT IN UNA SOLA MAPPA GLOBALE
-
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
@@ -10,19 +8,28 @@ import threading
 from rclpy.duration import Duration
 
 class GlobalMapMerger(Node):
+    """
+    Nodo ROS2 che unisce le mappe di occupazione e le costmap di più robot
+    in una singola mappa globale utilizzando le trasformazioni TF2.
+    """
     def __init__(self):
         super().__init__('global_map_merger')
         
+        # Dizionari per memorizzare le mappe di ogni robot
         self.occupancy_maps = {}
         self.costmaps = {}
+        # Lock per thread-safety nell'accesso alle mappe --> impedisce che vi siano mezze letture dei messaggi delle mappe.
         self.map_lock = threading.Lock()
         
+        # Parametro configurabile per i namespace dei robot
         self.declare_parameter('robot_namespaces', ['robot1', 'robot2'])
         self.robot_namespaces = self.get_parameter('robot_namespaces').get_parameter_value().string_array_value
 
+        # Setup TF2 per le trasformazioni tra frame
         self.tf_buffer = Buffer(Duration(seconds=5.0))
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        # Crea sottoscrizioni per le mappe di occupazione e costmap di ogni robot
         for ns in self.robot_namespaces:
             self.create_subscription(
                 OccupancyGrid,
@@ -37,44 +44,56 @@ class GlobalMapMerger(Node):
                 10
             )
 
+        # Publisher per le mappe globali unificate
         self.global_occupancy_map_pub = self.create_publisher(OccupancyGrid, '/global_map', 10)
         self.global_costmap_pub = self.create_publisher(OccupancyGrid, '/global_costmap', 10)
 
+        # Timer per eseguire il merge periodicamente
         self.timer = self.create_timer(1.0, self.merge_and_publish_maps)
         
         self.get_logger().info('Global Map Merger node initialized.')
 
     def occupancy_map_callback(self, msg, namespace):
+        """Memorizza la mappa di occupazione ricevuta dal robot specificato"""
         with self.map_lock:
             self.occupancy_maps[namespace] = msg
             self.get_logger().debug(f"Mappa di occupazione di {namespace} ricevuta.")
 
     def costmap_callback(self, msg, namespace):
+        """Memorizza la costmap ricevuta dal robot specificato"""
         with self.map_lock:
             self.costmaps[namespace] = msg
             self.get_logger().debug(f"Costmap di {namespace} ricevuta.")
             
     def merge_and_publish_maps(self):
+        """
+        Funzione principale che unisce tutte le mappe dei robot in mappe globali.
+        Calcola la bounding box, trasforma le coordinate e unisce i dati.
+        """
         with self.map_lock:
+            # Verifica che ci siano mappe disponibili
             if not self.occupancy_maps or not self.costmaps:
                 self.get_logger().warn('Mappe di occupazione o costmap mancanti. Salto il merge.')
                 return
             
-            # Utilizza la prima mappa di occupazione disponibile per determinare risoluzione e dimensioni iniziali
+            # Usa la prima mappa per parametri di base (risoluzione)
             first_occ_map_ns = next(iter(self.occupancy_maps))
             first_occ_map_msg = self.occupancy_maps[first_occ_map_ns]
 
             global_map_resolution = first_occ_map_msg.info.resolution
             
+            # Inizializza bounding box per calcolare le dimensioni globali
             min_x, max_x, min_y, max_y = float('inf'), float('-inf'), float('inf'), float('-inf')
             
-            # Calcola le dimensioni della bounding box per contenere tutte le mappe e costmap
+            # Combina tutte le mappe per calcolare la bounding box
             all_maps = list(self.occupancy_maps.items()) + list(self.costmaps.items())
             
             successful_merges = False
 
+            # Calcola la bounding box che contiene tutte le mappe
             for namespace, map_msg in all_maps:
                 try:
+                    # Ottieni trasformazione dal frame della mappa al frame globale
                     transform: TransformStamped = self.tf_buffer.lookup_transform(
                         'map',
                         map_msg.header.frame_id,
@@ -85,6 +104,7 @@ class GlobalMapMerger(Node):
                     self.get_logger().debug(f'Impossibile ottenere la trasformazione per {namespace}. Errore: {e}')
                     continue
                 
+                # Calcola i limiti della mappa trasformata
                 map_origin_x = transform.transform.translation.x
                 map_origin_y = transform.transform.translation.y
                 map_width = map_msg.info.width * map_msg.info.resolution
@@ -100,12 +120,14 @@ class GlobalMapMerger(Node):
                 self.get_logger().warn('Nessuna trasformata valida trovata. Salto il merge.')
                 return
 
+            # Aggiungi margine di sicurezza
             margin = 5.0
             min_x -= margin
             max_x += margin
             min_y -= margin
             max_y += margin
 
+            # Calcola dimensioni della mappa globale
             global_map_width_m = max_x - min_x
             global_map_height_m = max_y - min_y
             
@@ -116,6 +138,7 @@ class GlobalMapMerger(Node):
             global_map_width = int(global_map_width_m / global_map_resolution)
             global_map_height = int(global_map_height_m / global_map_resolution)
 
+            # Inizializza le griglie globali (sconosciuta per occupazione, libera per costmap)
             global_occupancy_map_data = np.full((global_map_height, global_map_width), -1, dtype=np.int8)
             global_costmap_data = np.full((global_map_height, global_map_width), 0, dtype=np.int8)
             
@@ -132,22 +155,27 @@ class GlobalMapMerger(Node):
                 
                 map_data_2d = np.array(map_msg.data, dtype=np.int8).reshape(map_msg.info.height, map_msg.info.width)
                 
+                # Trasforma ogni cella della mappa locale in coordinate globali
                 for y in range(map_msg.info.height):
                     for x in range(map_msg.info.width):
                         cell_value = map_data_2d[y, x]
-                        if cell_value == -1:
+                        if cell_value == -1:  # Salta celle sconosciute
                             continue
                         
+                        # Converti indici in coordinate mondo della mappa locale
                         wx = map_msg.info.origin.position.x + x * map_msg.info.resolution
                         wy = map_msg.info.origin.position.y + y * map_msg.info.resolution
                         
+                        # Applica trasformazione
                         tx = transform.transform.translation.x + wx
                         ty = transform.transform.translation.y + wy
                         
+                        # Converti in indici della mappa globale
                         gx_cell = int((tx - min_x) / global_map_resolution)
                         gy_cell = int((ty - min_y) / global_map_resolution)
                         
                         if 0 <= gx_cell < global_map_width and 0 <= gy_cell < global_map_height:
+                            # Logica di fusione: ostacoli hanno priorità su celle libere
                             if cell_value == 100:
                                 global_occupancy_map_data[gy_cell, gx_cell] = 100
                             elif cell_value == 0 and global_occupancy_map_data[gy_cell, gx_cell] != 100:
@@ -166,6 +194,7 @@ class GlobalMapMerger(Node):
                 
                 map_data_2d = np.array(map_msg.data, dtype=np.int8).reshape(map_msg.info.height, map_msg.info.width)
                 
+                # Stesso processo di trasformazione per le costmap
                 for y in range(map_msg.info.height):
                     for x in range(map_msg.info.width):
                         cell_value = map_data_2d[y, x]
@@ -215,6 +244,7 @@ class GlobalMapMerger(Node):
             self.get_logger().info('Mappe globali di occupazione e costo unificate e pubblicate.')
 
 def main(args=None):
+    """Funzione principale per inizializzare il nodo"""
     rclpy.init(args=args)
     node = GlobalMapMerger()
     rclpy.spin(node)
