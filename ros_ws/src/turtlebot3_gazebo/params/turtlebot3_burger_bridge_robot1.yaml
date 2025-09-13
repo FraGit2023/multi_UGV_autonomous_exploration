@@ -1,0 +1,53 @@
+# LA PARTE DEL CLOCK E' COMMENTATA PERCHE', ALTRIMENTI, VERREBBERO RIMAPPATI I 2 TOPIC /namespace/clock sullo stesso
+#topic /clock, e portando a salti temporali.
+# gz topic published by the simulator core
+# - ros_topic_name: "/clock"
+#   gz_topic_name: "clock"
+#   ros_type_name: "rosgraph_msgs/msg/Clock"
+#   gz_type_name: "gz.msgs.Clock"
+#   direction: GZ_TO_ROS
+
+
+# i topic di gazebo sono stati definiti nei file .sfd dei modelli dei 2 robot.
+
+# gz topic published by JointState plugin
+- ros_topic_name: "/robot1/robot1/joint_states"
+  gz_topic_name: "/robot1/robot1/joint_states"
+  ros_type_name: "sensor_msgs/msg/JointState"
+  gz_type_name: "gz.msgs.Model"
+  direction: GZ_TO_ROS
+
+# gz topic published by DiffDrive plugin
+- ros_topic_name: "/robot1/robot1/odom"
+  gz_topic_name: "/robot1/robot1/odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "gz.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# gz topic published by DiffDrive plugin   # PRIMA ERA COMMENTATO
+- ros_topic_name: "/tf"   # senza / pubblico la tf /robot1/odom --> /robot1/base_footprint sul topic /robot1/tf
+  gz_topic_name: "tf"
+  ros_type_name: "tf2_msgs/msg/TFMessage"
+  gz_type_name: "gz.msgs.Pose_V"
+  direction: GZ_TO_ROS
+
+# gz topic subscribed to by DiffDrive plugin
+- ros_topic_name: "/robot1/robot1/cmd_vel"
+  gz_topic_name: "/robot1/robot1/cmd_vel"
+  ros_type_name: "geometry_msgs/msg/TwistStamped" # If you use Twist, you need to change the type to Twist
+  gz_type_name: "gz.msgs.Twist"
+  direction: ROS_TO_GZ
+
+# gz topic published by IMU plugin
+- ros_topic_name: "/robot1/robot1/imu"
+  gz_topic_name: "/robot1/robot1/imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "gz.msgs.IMU"
+  direction: GZ_TO_ROS
+
+# gz topic published by Sensors plugin
+- ros_topic_name: "/robot1/robot1/scan"
+  gz_topic_name: "/robot1/robot1/scan"
+  ros_type_name: "sensor_msgs/msg/LaserScan"
+  gz_type_name: "gz.msgs.LaserScan"
+  direction: GZ_TO_ROS
