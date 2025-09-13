@@ -186,7 +186,7 @@ robot2:
           enabled: true
           observation_sources: scan # TO CHECK THIS 
           scan:
-            topic: /robot2/robot2/scan     # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+            topic: /robot2/robot2/scan     # NEWS --> qui era /scan, ora è /robot2/robot2/scan . Il namespace verrà poi aggiunto automaticamente
             max_obstacle_height: 2.0
             clearing: true
             marking: true
@@ -206,7 +206,7 @@ robot2:
           mark_threshold: 0
           observation_sources: scan # TO CHECK THIS
           scan:
-            topic: /robot2/robot2/scan       # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+            topic: /robot2/robot2/scan       # NEWS --> qui era /scan, ora è /robot2/robot2/scan . Il namespace verrà poi aggiunto automaticamente
             max_obstacle_height: 2.0
             clearing: true
             marking: true
@@ -360,7 +360,7 @@ robot2:
       scan:
         source_timeout: 0.7
         type: "scan"      # TO CHECK THIS
-        topic: "/robot2/robot2/scan"     # NEWS --> qui era /scan, ora è scan . Il namespace verrà poi aggiunto automaticamente
+        topic: "/robot2/robot2/scan"     # NEWS --> qui era /scan, ora è "/robot2/robot2/scan" . Il namespace verrà poi aggiunto automaticamente
         enabled: true
 
   velocity_smoother:
