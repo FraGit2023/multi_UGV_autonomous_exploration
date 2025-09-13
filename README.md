@@ -43,7 +43,7 @@ turtlebot3_autonomous_exploration/
 ├── test/                                      # Default folder for test files (currently unused)
 ├── turtlebot3_autonomous_exploration/
 │   ├── __init__.py                            # Marks the folder as a Python package
-│   ├── global_frame_broad.py                  # Generating global map frame
+│   ├── global_frame_broad.py                  # Generating global frame 'map'
 │   ├── global_frontier_detector_node.py       # Frontier detection node working on the merge map
 │   ├── global_map_merger_node.py              # Merge robots' maps node
 │   ├── greedy_task_allocator_node.py          # Frontier goal assignment node   
