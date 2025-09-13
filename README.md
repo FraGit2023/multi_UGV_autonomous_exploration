@@ -74,6 +74,14 @@ chmod +x run.sh exec.sh chown_me.sh
 
 ## 3. Inside the Container
 Run the following commands:
+```
+source /opt/ros/jazzy/setup.bash
+export TURTLEBOT3_MODEL=burger
+cd /root/ros_workspace
+colcon build
+source install/setup.bash
+ros2 launch turtlebot3_autonomous_explorationmulti_r1r2.launch.py
+```
 
 
 
