@@ -72,6 +72,9 @@ chmod +x run.sh exec.sh chown_me.sh
 ./run.sh
 ```
 
+## 3. Inside the Container
+Run the following commands:
+
 
 
 
