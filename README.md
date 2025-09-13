@@ -111,11 +111,11 @@ To *__change the initial positions__* of the robots:
    > y_pose_robot2 :  0.5
      
    > ---
-   > **custom_house.world**
-   > x_pose_robot1 : -2.0   
-   > y_pose_robot1 : -0.5  
-   > x_pose_robot2 : -2.0  
-   > y_pose_robot2 :  0.5  
+   > **custom_house.world**  
+   > x_pose_robot1 : -1.0   
+   > y_pose_robot1 : -1.0  
+   > x_pose_robot2 :  3.0  
+   > y_pose_robot2 :  0.0  
 
 
 
