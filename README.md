@@ -12,6 +12,6 @@
 ```
 ### **`ros_ws/src`** contains:
 
-#### **`ros_ws/src`** turtlebot3_gazebo
+#### **`turtlebot3_gazebo`** 
 
 
