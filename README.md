@@ -93,7 +93,7 @@ To change the simulated world:
   ```bash
   ros_ws/src/turtlebot3_autonomous_exploration/launch/multi_r1r2.launch.py
   ```
-3. ciao
+3.On *line 12*, update the launch file name to one of the following:
 
 
 
