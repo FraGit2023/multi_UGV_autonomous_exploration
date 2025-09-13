@@ -62,6 +62,8 @@ chmod +x build.sh
 ./build.sh
 ```
 
+`|` Ensure scripts are executable:
+
 
 
 
