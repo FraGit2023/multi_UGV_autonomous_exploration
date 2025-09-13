@@ -14,10 +14,10 @@ robot2/robot2:
         map_frame: robot2/robot2/map
         base_frame: robot2/robot2/base_footprint
         scan_topic: scan         # questo deve rimanere invariato (scan) per iscriversi al topic /robot2/scan
-        use_sim_time: true       # Assicurati che sia impostato su true se stai usando simulazione
+        use_sim_time: true       
         map_name: /robot2/robot2/map  # IMPORTANTE :  questo permette di pubblicare la mappa su /robot2/robot2/map
         # Parametri di mapping
-        use_map_saver: true
+        use_map_saver:  true 
         mode: mapping
         debug_logging: false
         throttle_scans: 1
