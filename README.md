@@ -16,4 +16,11 @@
 - Forked and adapted from [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations)
 - Includes robot models and launch files to spawn TurtleBot3 in a Gazebo simulation and establish communication with ROS.
 
+Modifications:
+-
+-
+-
+-
+-
+
 
