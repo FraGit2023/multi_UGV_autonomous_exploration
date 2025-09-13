@@ -54,10 +54,6 @@ def generate_launch_description():
     gz_sim_server = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
         #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'custom_house.world')]}.items()
-        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage2.world')]}.items()
-        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage1.world')]}.items()
-        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage3.world')]}.items()
-        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_house.world')]}.items()
         launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage4.world')]}.items()
     )   
 
