@@ -1,5 +1,9 @@
-# MIGLIORE ATTUALE VERSIONE : INVIO CORRETTO DEI GOAL AI ROBOT NEL LORO FRAME LOCALE.
-# IMPLEMENTATA STRATEGIA DI RECUPERO PER CORRIDOI.
+# MIGLIORE ATTUALE VERSIONE CON FIX RECOVERY PROTECTION
+# Strategia di fallback graduale: Implementa fallback graduali con moltiplicatori [1.2, 1.4, 1.8, 2]
+# Gestione robusta degli errori: Include il metodo handle_recovery_goal_failure()
+# che gestisce i casi in cui il goal di recovery viene rifiutato o fallisce
+# Fallback multipli: Se un goal di recovery fallisce, prova automaticamente con la frontiera più vicina al robot
+# FIX RECOVERY PROTECTION: Protezione rigida solo per recovery mode, comportamento normale invariato
 
 import rclpy
 import tf2_geometry_msgs
@@ -14,19 +18,35 @@ import numpy as np
 import math
 
 class GreedyTaskAllocator(Node):
+    """
+    Nodo ROS2 che implementa un allocatore di task per più robot autonomi.
+    
+    La strategia di allocazione è "greedy": assegna i compiti (esplorazione di frontiere)
+    in base alla distanza, dando priorità alle frontiere più lontane tra loro per
+    massimizzare la copertura dell'area.
+    
+    """
+
     def __init__(self):
+        
         super().__init__('greedy_task_allocator')
         
+        # Elenco dei nomi dei robot gestiti dal nodo
         self.robots = ['robot1', 'robot2']
+        # Dizionario per memorizzare l'ultima posizione conosciuta di ogni robot
         self.robot_poses = {}
+        # Elenco dei centroidi delle frontiere (punti di interesse per l'esplorazione)
         self.frontier_centroids = []
         
+        # Inizializza il listener TF per trasformare le pose tra i frame di coordinate
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        
         self.frontier_sub = self.create_subscription(
             Path, '/global_frontier_centroids', self.frontier_callback, 10)
 
+        
         for robot_name in self.robots:
             self.create_subscription(
                 Odometry,
@@ -35,33 +55,45 @@ class GreedyTaskAllocator(Node):
                 10
             )
 
+        # Client di azione per inviare goal di navigazione (NavigateToPose) a ciascun robot
         self.nav_clients = {
             robot_name: ActionClient(self, NavigateToPose, f'/{robot_name}/{robot_name}/navigate_to_pose')
             for robot_name in self.robots
         }
         
+        # Dizionario per tenere traccia del goal assegnato a ciascun robot
         self.assigned_goals = {robot_name: None for robot_name in self.robots}
+        # Dizionario per memorizzare l'handle del goal di azione attivo (per cancellazioni/stati)
         self.goal_handles = {robot_name: None for robot_name in self.robots}
         
-        # NUOVI ATTRIBUTI PER LA STRATEGIA DI RECUPERO
+        # ATTRIBUTI PER LA STRATEGIA DI RECUPERO
         self.goal_history = {robot_name: [] for robot_name in self.robots}  # Storico degli ultimi goal assegnati
-        self.goal_completion_status = {robot_name: False for robot_name in self.robots}  # Se il goal è stato completato
-        self.recovery_mode = {robot_name: False for robot_name in self.robots}  # Se il robot è in modalità recovery
+        self.goal_completion_status = {robot_name: False for robot_name in self.robots}  # Stato di completamento del goal
+        self.recovery_mode = {robot_name: False for robot_name in self.robots}  # Flag per indicare se un robot è in modalità recovery
         
         # POSIZIONI INIZIALI DEI ROBOT (salvate al primo odom ricevuto)
         self.initial_positions = {robot_name: None for robot_name in self.robots}
+
+        # Flag per lo stato generale del sistema
         self.exploration_completed = False
+        self.initialization_complete = False
+        self.create_timer(5.0, self.complete_initialization)  # Timer di inizializzazione per garantire la disponibilità dei dati iniziali
         
         # Parametri per la strategia di recupero
         self.max_goal_history = 3  # Numero massimo di goal da tenere nello storico
         self.recovery_distance_threshold = 0.5  # Distanza minima per considerare un goal raggiunto
-        self.recovery_distance_multiplier = 2  # Moltiplicatore per la distanza di recovery (4-5x)
+        self.recovery_distance_multiplier = 2  # Moltiplicatore base per la distanza di recovery
         
+        # Timer periodico per controllare lo stato dei robot e delle frontiere e avviare l'allocazione
         self.stuck_check_timer = self.create_timer(10.0, self.check_and_allocate)
 
         self.get_logger().info('Greedy Task Allocator node initialized with recovery strategy.')
 
     def odom_callback(self, msg, robot_name):
+        """
+        Callback per la ricezione dei messaggi di Odometry.
+        Aggiorna la posizione del robot e salva la posizione iniziale se è il primo messaggio.
+        """
         self.robot_poses[robot_name] = msg.pose.pose
         
         # Salva la posizione iniziale al primo messaggio ricevuto
@@ -72,17 +104,31 @@ class GreedyTaskAllocator(Node):
             )
             self.get_logger().info(f"Posizione iniziale salvata per {robot_name}: {self.initial_positions[robot_name]}")
 
+    def complete_initialization(self):
+        """
+        Callback del timer di inizializzazione. Imposta il flag 'initialization_complete'
+        per consentire l'avvio delle operazioni di allocazione.
+        """
+        self.initialization_complete = True
+        self.get_logger().info("Inizializzazione completata, sistema pronto per l'allocazione.")
+
     def frontier_callback(self, msg):
+        """
+        Callback per la ricezione dei centroidi delle frontiere.
+        Aggiorna l'elenco delle frontiere e avvia un controllo per l'allocazione.
+        Gestisce anche lo stato di completamento dell'esplorazione.
+        """
         self.frontier_centroids = [(p.pose.position.x, p.pose.position.y) for p in msg.poses]
         
-        # Controlla se l'esplorazione è completata
+        # Se non ci sono frontiere e l'esplorazione non è ancora contrassegnata come completata,
+        # significa che l'esplorazione è terminata.
         if not self.frontier_centroids and not self.exploration_completed:
             self.get_logger().info("Nessuna frontiera rilevata - Esplorazione completata! Invio robot alle posizioni iniziali.")
             self.exploration_completed = True
             self.send_robots_home()
             return
         
-        # Se ci sono nuove frontiere dopo il completamento, riattiva l'esplorazione
+        # Se ci sono nuove frontiere dopo che l'esplorazione era stata completata, la si riattiva.
         if self.frontier_centroids and self.exploration_completed:
             self.get_logger().info("Nuove frontiere rilevate - Riattivazione esplorazione.")
             self.exploration_completed = False
@@ -93,27 +139,34 @@ class GreedyTaskAllocator(Node):
         """
         Controlla lo stato dei robot e delle frontiere e avvia l'allocazione se necessario.
         """
-        # Se l'esplorazione è completata, non fare nulla
+        # Non procedere se l'inizializzazione non è completa
+        if not self.initialization_complete:
+            return
+        
+        # Non procedere se l'esplorazione è completata
         if self.exploration_completed:
             return
             
+        # Verifica che i dati necessari (posizioni dei robot e frontiere) siano disponibili
         if not all(robot in self.robot_poses for robot in self.robots) or not self.frontier_centroids:
             self.get_logger().warn("Dati mancanti per l'allocazione: posizioni robot o frontiere.")
             return
 
-        # Controlla se ci sono robot liberi (senza goal attivi)
+        # Trova i robot pronti per una nuova assegnazione
         ready_robots = []
         for robot_name in self.robots:
-            # PROTEZIONE RECOVERY: Se il robot è in modalità recovery, NON è considerato pronto
+            # PROTEZIONE RECOVERY: Un robot in modalità recovery non viene considerato pronto per
+            # nuove assegnazioni normali. Questo evita di interrompere la sua azione di recupero.
             if self.recovery_mode[robot_name]:
-                self.get_logger().info(f"Robot {robot_name} è in modalità recovery - non può ricevere nuovi goal fino al completamento.")
+                self.get_logger().info(f"Robot {robot_name} è in modalità recovery - PROTETTO fino al completamento.")
                 continue
                 
+            # Controllo normale: un robot è pronto se non ha un goal assegnato
             if self.assigned_goals[robot_name] is None:
                 ready_robots.append(robot_name)
         
+        # Se non ci sono robot pronti, esci
         if not ready_robots:
-            # Verifica se tutti i robot sono bloccati in recovery mode
             robots_in_recovery = [r for r in self.robots if self.recovery_mode[r]]
             if robots_in_recovery:
                 self.get_logger().info(f"Robot in modalità recovery: {robots_in_recovery} - attendendo completamento goal di recovery.")
@@ -125,12 +178,13 @@ class GreedyTaskAllocator(Node):
 
     def is_goal_reached(self, robot_name, goal_coords):
         """
-        Verifica se il robot ha raggiunto il goal specificato.
+        Verifica se il robot ha raggiunto il goal specificato confrontando la sua posizione
+        attuale con le coordinate del goal. La posizione del robot viene trasformata nel
+        frame globale 'map' per un confronto accurato.
         """
         if robot_name not in self.robot_poses:
             return False
         
-        # Trasforma la posizione del robot nel frame globale per il confronto
         robot_pose_stamped = PoseStamped()
         robot_pose_stamped.header.frame_id = f'{robot_name}/{robot_name}/odom'
         robot_pose_stamped.header.stamp = self.get_clock().now().to_msg()
@@ -152,6 +206,7 @@ class GreedyTaskAllocator(Node):
                 goal_coords[1] - robot_pose_in_map.pose.position.y
             )
             
+            # Ritorna True se la distanza è minore della soglia di recovery
             return distance < self.recovery_distance_threshold
             
         except Exception as e:
@@ -161,7 +216,8 @@ class GreedyTaskAllocator(Node):
     def needs_recovery(self, robot_name):
         """
         Determina se un robot ha bisogno della strategia di recupero.
-        Condizione: stesso goal assegnato 2 volte consecutive E goal già raggiunto.
+        La condizione di recovery è soddisfatta se lo stesso goal è stato assegnato
+        due volte consecutive e il robot si trova già nelle vicinanze di quel goal.
         """
         history = self.goal_history[robot_name]
         
@@ -183,34 +239,41 @@ class GreedyTaskAllocator(Node):
 
     def find_recovery_goal(self, robot_name, problematic_goal):
         """
-        Trova il goal di recupero usando la strategia della distanza moltiplicata con fallback graduali.
+        Trova un goal di recupero per un robot.
+        Usa una strategia di "fallback graduale": cerca una frontiera a una distanza
+        moltiplicata dalla frontiera problematica. Se fallisce, usa la frontiera
+        più vicina al robot.
         """
+        # Crea una lista di frontiere disponibili, escludendo quella problematica
         available_frontiers = [f for f in self.frontier_centroids if f != problematic_goal]
         
         if not available_frontiers:
             self.get_logger().error(f"Nessuna frontiera disponibile per il recupero di {robot_name}.")
             return None
         
-        # Calcola le distanze di tutte le frontiere dalla problematica
+        # Calcola le distanze di tutte le frontiere dalla frontiera problematica
         frontier_distances = []
         for f in available_frontiers:
             dist = math.hypot(f[0] - problematic_goal[0], f[1] - problematic_goal[1])
             frontier_distances.append((dist, f))
         
-        # Ordina per distanza crescente
+        # Ordina le frontiere per distanza crescente dalla frontiera problematica
         frontier_distances.sort(key=lambda x: x[0])
         
-        # Distanza della frontiera più vicina
+        # Se la lista è vuota, esci
+        if not frontier_distances:
+            return None
+            
         min_distance = frontier_distances[0][0]
         
         # STRATEGIA CON FALLBACK GRADUALI
-        multipliers = [1.2, 1.4, 1.8 ,self.recovery_distance_multiplier]  # 1.2, 1.4, 1.8, 2
+        multipliers = [1.2, 1.4, 1.8, self.recovery_distance_multiplier]  # [1.2, 1.4, 1.8, 2]
         
         for multiplier in multipliers:
             target_min_distance = min_distance * multiplier
             self.get_logger().info(f"Recovery per {robot_name}: tentativo con moltiplicatore {multiplier} (distanza target: {target_min_distance:.2f})")
             
-            # Cerca la prima frontiera che soddisfa questo criterio
+            # Cerca la prima frontiera che soddisfa il criterio di distanza
             for dist, frontier in frontier_distances:
                 if dist >= target_min_distance:
                     self.get_logger().info(f"Goal di recupero per {robot_name}: {frontier} (distanza {dist:.2f} >= {target_min_distance:.2f} dal goal problematico {problematic_goal}).")
@@ -218,7 +281,7 @@ class GreedyTaskAllocator(Node):
             
             self.get_logger().warn(f"Nessuna frontiera trovata con moltiplicatore {multiplier}, provo con il successivo...")
         
-        # ULTIMO FALLBACK: prendi la frontiera più vicina al robot (non alla problematica)
+        # ULTIMO FALLBACK: Se tutti i moltiplicatori falliscono, prendi la frontiera più vicina al robot
         self.get_logger().warn(f"Tutti i moltiplicatori falliti. Uso la frontiera più vicina al robot {robot_name}.")
         return self.find_closest_frontier_to_robot(robot_name, available_frontiers)
     
@@ -230,7 +293,6 @@ class GreedyTaskAllocator(Node):
             self.get_logger().error(f"Posizione del robot {robot_name} non disponibile.")
             return available_frontiers[0] if available_frontiers else None
         
-        # Trasforma la posizione del robot nel frame globale
         robot_pose_stamped = PoseStamped()
         robot_pose_stamped.header.frame_id = f'{robot_name}/{robot_name}/odom'
         robot_pose_stamped.header.stamp = self.get_clock().now().to_msg()
@@ -238,6 +300,7 @@ class GreedyTaskAllocator(Node):
         robot_pose_stamped.pose.orientation = self.robot_poses[robot_name].orientation
 
         try:
+            # Trasforma la posizione del robot nel frame globale
             latest_time = self.tf_buffer.get_latest_common_time('map', f'{robot_name}/{robot_name}/odom')
             robot_pose_stamped.header.stamp = latest_time.to_msg()
             
@@ -247,7 +310,7 @@ class GreedyTaskAllocator(Node):
                 timeout=rclpy.duration.Duration(seconds=2.0)
             )
             
-            # Trova la frontiera più vicina al robot
+            # Trova la frontiera più vicina tra quelle disponibili
             closest_frontier = min(
                 available_frontiers,
                 key=lambda f: math.hypot(
@@ -266,22 +329,28 @@ class GreedyTaskAllocator(Node):
             
         except Exception as e:
             self.get_logger().error(f"Errore nel trovare la frontiera più vicina al robot {robot_name}: {e}")
-            # Ultimate fallback: prima frontiera disponibile
+            # Fallback finale: prima frontiera disponibile
             return available_frontiers[0] if available_frontiers else None
 
     def update_goal_history(self, robot_name, goal_coords):
         """
-        Aggiorna lo storico dei goal per un robot.
+        Aggiorna lo storico dei goal per un robot, mantenendo solo gli N goal più recenti.
         """
         self.goal_history[robot_name].append(goal_coords)
         
-        # Mantieni solo gli ultimi N goal
+        # Mantieni solo gli ultimi N goal per la storia
         if len(self.goal_history[robot_name]) > self.max_goal_history:
             self.goal_history[robot_name].pop(0)
         
         self.get_logger().info(f"Storico goal aggiornato per {robot_name}: {self.goal_history[robot_name]}")
 
     def allocate_tasks(self, ready_robots):
+        """
+        Funzione principale di allocazione. Assegna le frontiere ai robot pronti.
+        La strategia principale assegna le due frontiere più distanti ai due robot
+        più vicini ad esse, per massimizzare la separazione.
+        """
+        # Gestisce il caso in cui ci sono meno frontiere che robot
         if len(self.frontier_centroids) < len(ready_robots):
             self.get_logger().warn('Meno frontiere disponibili che robot da assegnare. Assegno le frontiere rimanenti.')
             for i, robot_name in enumerate(ready_robots):
@@ -292,13 +361,13 @@ class GreedyTaskAllocator(Node):
                     self.update_goal_history(robot_name, goal)
             return
 
-        # Controlla se qualche robot necessita strategia di recupero
+        # Controlla se qualche robot necessita di recovery e lo gestisce
         recovery_robots = []
         for robot_name in ready_robots:
             if self.needs_recovery(robot_name):
                 recovery_robots.append(robot_name)
                 
-        # Processa prima i robot che necessitano recovery
+        # Processa prima i robot che necessitano di recovery, assegnando loro un goal di recupero
         for robot_name in recovery_robots:
             self.recovery_mode[robot_name] = True
             problematic_goal = self.goal_history[robot_name][-1]
@@ -309,13 +378,13 @@ class GreedyTaskAllocator(Node):
                 self.send_navigation_goal(robot_name, recovery_goal)
                 self.assigned_goals[robot_name] = recovery_goal
                 self.update_goal_history(robot_name, recovery_goal)
-                ready_robots.remove(robot_name)  # Rimuovi dalla lista dei robot da processare normalmente
+                ready_robots.remove(robot_name)  # Rimuovi il robot dalla lista dei pronti per l'allocazione normale
 
-        # Se non ci sono robot rimasti dopo il recovery, esci
+        # Se non ci sono robot rimasti, esci
         if not ready_robots:
             return
 
-        # 1. Trova le due frontiere più distanti tra loro
+        # 1. Trova le due frontiere più distanti tra loro per la strategia "greedy"
         frontier_distances = []
         for i in range(len(self.frontier_centroids)):
             for j in range(i + 1, len(self.frontier_centroids)):
@@ -338,18 +407,15 @@ class GreedyTaskAllocator(Node):
             # Reset recovery mode per robot che non sono in recovery
             self.recovery_mode[robot_name] = False
             
-            # Creiamo una posa da trasformare
+            # Ottieni la posa del robot nel frame globale 'map'
             robot_pose_stamped = PoseStamped()
             robot_pose_stamped.header.frame_id = f'{robot_name}/{robot_name}/odom'
             robot_pose_stamped.header.stamp = self.get_clock().now().to_msg()
             
-            # Popoliamo la posa con i dati ricevuti
             robot_pose_stamped.pose.position = self.robot_poses[robot_name].position
             robot_pose_stamped.pose.orientation = self.robot_poses[robot_name].orientation
 
-            # Trasformiamo la posizione del robot nel frame globale 'map'
             try:
-                # Usa l'ultimo timestamp disponibile per evitare extrapolazione
                 latest_time = self.tf_buffer.get_latest_common_time('map', f'{robot_name}/{robot_name}/odom')
                 robot_pose_stamped.header.stamp = latest_time.to_msg()
                 
@@ -362,12 +428,14 @@ class GreedyTaskAllocator(Node):
                 self.get_logger().error(f"Errore di trasformazione della posa del robot {robot_name}: {e}")
                 continue
 
+            # Calcola le distanze del robot dalle due frontiere più lontane
             dists = []
             for f in most_distant_frontiers:
                 if f not in assigned_frontiers:
                     d = math.hypot(f[0] - robot_pose_in_map.pose.position.x, f[1] - robot_pose_in_map.pose.position.y)
                     dists.append((d, f))
             
+            # Se nessuna delle due frontiere più distanti è disponibile, scegli la più vicina tra le rimanenti
             if not dists:
                 self.get_logger().warn(f"Nessuna delle frontiere più distanti è disponibile per il robot {robot_name}. Scelgo la più vicina tra quelle rimanenti.")
                 available_frontiers = [f for f in self.frontier_centroids if f not in assigned_frontiers]
@@ -379,6 +447,7 @@ class GreedyTaskAllocator(Node):
                     assigned_frontiers.add(closest_frontier)
                 continue
 
+            # Scegli la frontiera più vicina al robot
             dists.sort(key=lambda x: x[0])
             chosen_frontier = dists[0][1]
             
@@ -390,18 +459,22 @@ class GreedyTaskAllocator(Node):
             assigned_frontiers.add(chosen_frontier)
 
     def send_navigation_goal(self, robot_name, goal_coords):
+        """
+        Invia un goal di navigazione al Nav2 del robot specificato.
+        Il goal viene trasformato dal frame globale 'map' al frame locale del robot
+        prima di essere inviato.
+        """
         # Crea il goal nel frame globale 'map'
         goal_pose_stamped = PoseStamped()
         goal_pose_stamped.header.frame_id = 'map'
         goal_pose_stamped.header.stamp = self.get_clock().now().to_msg()
         goal_pose_stamped.pose.position.x = goal_coords[0]
         goal_pose_stamped.pose.position.y = goal_coords[1]
-        # IGNORA L'ORIENTAMENTO - lascia che il robot mantenga quello attuale
+        # L'orientamento viene impostato a un valore neutro (w=1.0)
         goal_pose_stamped.pose.orientation.w = 1.0
 
         try:
-            # Trasforma il goal dal frame globale 'map' al frame locale del robot
-            # Usa timestamp compatibile per evitare extrapolazione
+            # Trasforma il goal dal frame 'map' al frame locale del robot (es. 'robot1/map')
             latest_time = self.tf_buffer.get_latest_common_time('map', f'{robot_name}/{robot_name}/map')
             goal_pose_stamped.header.stamp = latest_time.to_msg()
             
@@ -411,7 +484,7 @@ class GreedyTaskAllocator(Node):
                 timeout=rclpy.duration.Duration(seconds=2.0)
             )
             
-            # IMPORTANTE: Imposta il frame_id corretto dopo la trasformazione
+            # Imposta il frame_id corretto dopo la trasformazione
             transformed_goal.header.frame_id = f'{robot_name}/{robot_name}/map'
             transformed_goal.header.stamp = self.get_clock().now().to_msg()
             
@@ -429,7 +502,7 @@ class GreedyTaskAllocator(Node):
             
             self.get_logger().info(f"Invio del goal trasformato a {robot_name} nel frame {transformed_goal.header.frame_id}{recovery_info}.")
             
-            # Invia il goal e registra i callback
+            # Invia il goal e registra i callback per la risposta e il risultato
             future = nav_client.send_goal_async(goal_msg)
             future.add_done_callback(lambda future, robot=robot_name: self.goal_response_callback(future, robot))
 
@@ -440,12 +513,16 @@ class GreedyTaskAllocator(Node):
             return
 
     def goal_response_callback(self, future, robot_name):
+        """
+        Callback per gestire la risposta del server Nav2 dopo l'invio di un goal.
+        Controlla se il goal è stato accettato.
+        """
         try:
             goal_handle = future.result()
             if not goal_handle.accepted:
                 self.get_logger().warn(f'Goal rifiutato da Nav2 per {robot_name}.')
                 
-                # Se il robot è in recovery mode e il goal è stato rifiutato, prova un fallback
+                # Se il goal di recovery è stato rifiutato, si tenta il fallback immediato
                 if self.recovery_mode[robot_name]:
                     self.get_logger().warn(f'Goal di recovery rifiutato per {robot_name}, provo con frontiera più vicina al robot.')
                     self.handle_recovery_goal_failure(robot_name)
@@ -457,14 +534,20 @@ class GreedyTaskAllocator(Node):
             self.get_logger().info(f'Goal accettato da Nav2 per {robot_name}{recovery_info}.')
             self.goal_handles[robot_name] = goal_handle
             
-            # Registra callback per il risultato
+            # PROTEZIONE SELETTIVA: L'assegnazione viene mantenuta solo in recovery mode.
+            # In modalità normale, il goal viene resettato subito per permettere al timer
+            # di assegnare un nuovo task a un altro robot mentre il primo è in movimento.
+            if not self.recovery_mode[robot_name]:
+                self.assigned_goals[robot_name] = None
+            
+            # Registra il callback per il risultato finale
             result_future = goal_handle.get_result_async()
             result_future.add_done_callback(lambda future, robot=robot_name: self.goal_result_callback(future, robot))
             
         except Exception as e:
             self.get_logger().error(f"Errore nella risposta del goal per {robot_name}: {e}")
             
-            # Se il robot è in recovery mode e c'è stato un errore, prova un fallback
+            # Gestione errori in modalità recovery
             if self.recovery_mode[robot_name]:
                 self.get_logger().error(f'Errore nel goal di recovery per {robot_name}, provo con frontiera più vicina al robot.')
                 self.handle_recovery_goal_failure(robot_name)
@@ -473,13 +556,13 @@ class GreedyTaskAllocator(Node):
 
     def handle_recovery_goal_failure(self, robot_name):
         """
-        Gestisce il fallimento di un goal di recovery provando con la frontiera più vicina al robot.
+        Gestisce il fallimento di un goal di recovery (rifiuto o errore).
+        Trova un nuovo goal (la frontiera più vicina al robot) e lo assegna.
         """
-        problematic_goal = self.assigned_goals[robot_name]  # Il goal che ha fallito
+        problematic_goal = self.assigned_goals[robot_name]
         available_frontiers = [f for f in self.frontier_centroids if f != problematic_goal]
         
         if available_frontiers:
-            # Trova la frontiera più vicina al robot
             fallback_goal = self.find_closest_frontier_to_robot(robot_name, available_frontiers)
             
             if fallback_goal:
@@ -497,6 +580,9 @@ class GreedyTaskAllocator(Node):
             self.recovery_mode[robot_name] = False
 
     def goal_result_callback(self, future, robot_name):
+        """
+        Callback per gestire il risultato finale di un goal di navigazione.
+        """
         try:
             result = future.result()
             recovery_info = " (MODALITÀ RECOVERY)" if self.recovery_mode[robot_name] else ""
@@ -513,7 +599,7 @@ class GreedyTaskAllocator(Node):
             self.goal_handles[robot_name] = None
             self.goal_completion_status[robot_name] = False
             
-            # Reset recovery mode solo dopo completamento goal
+            # Reset recovery mode solo dopo che il goal di recovery è stato completato
             if self.recovery_mode[robot_name]:
                 self.get_logger().info(f'Robot {robot_name} esce dalla modalità recovery.')
                 self.recovery_mode[robot_name] = False
@@ -525,16 +611,16 @@ class GreedyTaskAllocator(Node):
         Invia tutti i robot alle loro posizioni iniziali quando l'esplorazione è completata.
         """
         for robot_name in self.robots:
+            # Controlla se il robot ha una posizione iniziale, non ha un goal attivo e non è in recovery
             if (self.initial_positions[robot_name] is not None and 
                 self.assigned_goals[robot_name] is None and
-                not self.recovery_mode[robot_name]):  # Non interferire con robot in recovery
+                not self.recovery_mode[robot_name]):
                 
                 initial_pos = self.initial_positions[robot_name]
                 self.get_logger().info(f"Invio {robot_name} alla posizione iniziale: {initial_pos}")
                 
                 # Trasforma la posizione iniziale (che è in odom) al frame globale map
                 try:
-                    # Crea pose nel frame odom del robot
                     initial_pose_stamped = PoseStamped()
                     initial_pose_stamped.header.frame_id = f'{robot_name}/{robot_name}/odom'
                     initial_pose_stamped.header.stamp = self.get_clock().now().to_msg()
@@ -542,7 +628,6 @@ class GreedyTaskAllocator(Node):
                     initial_pose_stamped.pose.position.y = initial_pos[1]
                     initial_pose_stamped.pose.orientation.w = 1.0
                     
-                    # Trasforma in map
                     latest_time = self.tf_buffer.get_latest_common_time(f'{robot_name}/{robot_name}/odom', 'map')
                     initial_pose_stamped.header.stamp = latest_time.to_msg()
                     
@@ -561,6 +646,9 @@ class GreedyTaskAllocator(Node):
                     self.get_logger().error(f"Errore nell'invio di {robot_name} a casa: {e}")
 
 def main(args=None):
+    """
+    Funzione principale per l'esecuzione del nodo.
+    """
     rclpy.init(args=args)
     node = GreedyTaskAllocator()
     rclpy.spin(node)
