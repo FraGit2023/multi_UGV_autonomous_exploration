@@ -115,7 +115,9 @@ To *__change the initial positions__* of the robots:
    > x_pose_robot1 : -1.0   
    > y_pose_robot1 : -1.0  
    > x_pose_robot2 :  3.0  
-   > y_pose_robot2 :  0.0  
+   > y_pose_robot2 :  0.0
+
+3. ciao 
 
 
 
