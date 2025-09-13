@@ -10,5 +10,5 @@
 ├── run.sh           # Script to run the Docker container with correct volumes and permissions
 └── exec.sh          # Script to open a shell into a running container
 ```
-**`ros_ws/src`** contains:
+## **`ros_ws/src`** contains
 
