@@ -18,6 +18,6 @@
 
 Modifications:
 - in the `/launch` folder, a new file `spawn_turtlebot3_robot2.launch.py` has been created, based on the orginal file `spawn_turtlebot3.launch.py` included in the same folder.
-- Adjusted robot parameters
+- Adjusted robot parameters. The new file allows to spawn the correct model of the robot and the correct bridge file
 
 
