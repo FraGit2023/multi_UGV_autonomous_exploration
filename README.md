@@ -32,7 +32,7 @@ turtlebot3_autonomous_exploration/
 │   ├── nav2_robot2.yaml
 │   └── slam_robot1.yaml
 │   └── slam_robot2.yaml
-│   └── robot_initial_positions.yaml           # Configuraton file needed for the map merge
+│   └── robot_initial_positions.yaml           # Configuraton file needed for global frame 'map' genration and then also for the map merge
 ├── launch/                 
 │   └── multi_r1r2.launch.py                   # Main launch file for the Multi-robot autonomous exploration
 │   └── navigation_robot1_launch.py            # modified nav2 file, based on the ROS2 installation file, for the robot1  
