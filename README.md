@@ -87,7 +87,7 @@ RViz2 and Gazebo should start and show the simulation in real time.
 
 ---
 # 🌍📍 Switching Simulation Environments and Initial Positions
-To change the simulated world: 
+To *___change the simulated world__*: 
 
 1. Go to :
   ```bash
@@ -96,7 +96,7 @@ To change the simulated world:
 2. On __lines 56 and 57__, two worlds can be chosen: __custom_house.world__ or __turtlebot3_dqn_stage4.world__. Commenting one of the two lines, the world related to the de-commented line will start.
 
 ---
-To change the initial positions of the robots:
+To *__change the initial positions__* of the robots:
 
 1. Go to :
   ```bash
