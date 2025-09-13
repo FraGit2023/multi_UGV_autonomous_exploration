@@ -9,3 +9,6 @@
 ├── chown_me.sh      # Script to fix ownership of files created as root inside the container
 ├── run.sh           # Script to run the Docker container with correct volumes and permissions
 └── exec.sh          # Script to open a shell into a running container
+```
+### *ros_ws/src* contiene
+
