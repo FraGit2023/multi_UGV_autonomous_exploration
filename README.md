@@ -17,7 +17,7 @@
 - Includes robot models and launch files to spawn TurtleBot3 in a Gazebo simulation and establish communication with ROS.
 
 Modifications:
-- in the `/launch` folder
+- in the `/launch` folder, a new file `spawn_turtlebot3_robot2.launch.py` has been created, based on the orginal file `spawn_turtlebot3.launch.py` included in the same folder.
 - Adjusted robot parameters
 
 
