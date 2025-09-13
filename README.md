@@ -1,5 +1,5 @@
 # 🤖 Multi-TurtleBot3 Autonomous Exploration with ROS 2 and Gazebo
-The aim of the project is to continue the work carried out in [turtlebot3-autonomous-exploration]([https://github.com/ROBOTIS-GIT/turtlebot3_simulations](https://github.com/sltncl/turtlebot3-autonomous-exploration)), moving from an exploration with a single robot to an exploration with 2 robots, which collaborate with each other to explore and map an unknown environment
+The aim of the project is to continue the work carried out in [turtlebot3-autonomous-exploration](https://github.com/sltncl/turtlebot3-autonomous-exploration), moving from an exploration with a single robot to an exploration with 2 robots, which collaborate with each other to explore and map an unknown environment
 
 ## 📂 Project Structure
 
