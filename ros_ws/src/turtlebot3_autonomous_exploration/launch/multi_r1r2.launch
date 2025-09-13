@@ -34,11 +34,11 @@ def generate_launch_description():
     declare_namespace_arg_r1 = DeclareLaunchArgument('namespace_r1', default_value='robot1')
     declare_namespace_arg_r2 = DeclareLaunchArgument('namespace_r2', default_value='robot2')
 
-    declare_x_pose_arg_robot1 = DeclareLaunchArgument('x_pose_robot1', default_value='0.0')
+    declare_x_pose_arg_robot1 = DeclareLaunchArgument('x_pose_robot1', default_value='-2.0')
     declare_y_pose_arg_robot1 = DeclareLaunchArgument('y_pose_robot1', default_value='-0.5')
 
-    declare_x_pose_arg_robot2 = DeclareLaunchArgument('x_pose_robot2', default_value='5.0')
-    declare_y_pose_arg_robot2 = DeclareLaunchArgument('y_pose_robot2', default_value='-1.0')
+    declare_x_pose_arg_robot2 = DeclareLaunchArgument('x_pose_robot2', default_value='-2.0')
+    declare_y_pose_arg_robot2 = DeclareLaunchArgument('y_pose_robot2', default_value='0.5')
 
     declare_use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
 
@@ -62,9 +62,12 @@ def generate_launch_description():
     # --- Avvio della Simulazione Gazebo ---
     gz_sim_server = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'custom_house.world')]}.items()
+        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'custom_house.world')]}.items()
         #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage2.world')]}.items()
         #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage1.world')]}.items()
+        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage3.world')]}.items()
+        #launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_house.world')]}.items()
+        launch_arguments={'gz_args': ['-r ', os.path.join(pkg_turtlebot3_gazebo, 'worlds', 'turtlebot3_dqn_stage4.world')]}.items()
     )   
 
 
@@ -300,6 +303,7 @@ def generate_launch_description():
                     ],
     )
 
+
     return LaunchDescription([
         declare_namespace_arg_r1,
         declare_namespace_arg_r2,
@@ -314,7 +318,7 @@ def generate_launch_description():
         gz_sim_server,
         clock_bridge,
         rviz_node,
-
+        
         # Avvio dei gruppi di azioni per i robot
         #gz_sim_client,
         global_frame_broad,                         
