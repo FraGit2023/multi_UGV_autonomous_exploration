@@ -124,6 +124,7 @@ RViz2 and Gazebo should start and show the simulation in real time.
   and specify the  same initial positions set in the launch file. This allows the correct functioning of the node that generates the global frame map and, consequently, also of the node that merges the maps.
 
 ---
+🔄 ciaca
 
 
 
