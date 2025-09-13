@@ -87,8 +87,11 @@ RViz2 and Gazebo should start and show the simulation in real time.
 
 ---
 # 🌍📍 Switching Simulation Environments and Initial Positions
-To change the simulated world:
-1. 
+To change the simulated world: 
+
+1. ciao
+2. ciao
+
 
 
 
