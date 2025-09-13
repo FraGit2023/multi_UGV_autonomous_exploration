@@ -103,7 +103,7 @@ To *__change the initial positions__* of the robots:
   ros_ws/src/turtlebot3_autonomous_exploration/launch/multi_r1r2.launch.py
   ```
 2. On lines __37-38 and 40-41__, the initial positions of the robots can be changed. The initial positions must be chosen appropriately, ensuring that the robots are not spawn on obstacles or outside the map.
-   > recommended starting positions:  
+   > recommended starting positions:    
    > **turtlebot3_dqn_stage4.world**
    > x_pose_robot1 : -2.0  
    > y_pose_robot1 : -0.5  
