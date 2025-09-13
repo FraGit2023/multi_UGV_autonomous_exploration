@@ -67,6 +67,10 @@ chmod +x build.sh
 cd ..
 chmod +x run.sh exec.sh chown_me.sh
 ```
+## 2. Run the Docker Container
+```bash
+./run.sh
+```
 
 
 
