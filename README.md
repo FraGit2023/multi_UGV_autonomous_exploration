@@ -104,7 +104,7 @@ To *__change the initial positions__* of the robots:
   ```
 2. On lines __37-38 and 40-41__, the initial positions of the robots can be changed. The initial positions must be chosen appropriately, ensuring that the robots are not spawn on obstacles or outside the map.
    > recommended starting positions:    
-   > **turtlebot3_dqn_stage4.world**
+   > **turtlebot3_dqn_stage4.world**  
    > x_pose_robot1 : -2.0  
    > y_pose_robot1 : -0.5  
    > x_pose_robot2 : -2.0  
