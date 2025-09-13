@@ -84,7 +84,7 @@ ros2 launch turtlebot3_autonomous_exploration multi_r1r2.launch.py
 ```
 
 RViz2 and Gazebo should start and show the simulation in real time.
-
+--
 # 🌍📍 Switching Simulation Environments and Initial Positions
 
 
