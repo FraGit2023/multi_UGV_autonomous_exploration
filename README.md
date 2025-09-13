@@ -87,7 +87,7 @@ RViz2 and Gazebo should start and show the simulation in real time.
 
 ---
 # 🌍📍 Switching Simulation Environments and Initial Positions
-To *___change the simulated world__*: 
+To *__change the simulated world__*: 
 
 1. Go to :
   ```bash
@@ -102,7 +102,9 @@ To *__change the initial positions__* of the robots:
   ```bash
   ros_ws/src/turtlebot3_autonomous_exploration/launch/multi_r1r2.launch.py
   ```
-2. 
+2. On lines __37-38 and 40-41__, the initial positions of the robots can be changed. The initial positions must be chosen appropriately, ensuring that the robots are not spawn on obstacles or outside the map.
+   > recommended starting positions:
+   > 
 
 
 
