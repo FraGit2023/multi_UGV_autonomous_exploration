@@ -21,7 +21,7 @@ Modifications:
 - in the `/models/turtlebot3_burger` folder, a new file `model_robot2.sdf` has been created, based on the file `model.sdf`. Both files were generated starting from the original file `model.sdf` contained in the folder  `/models/turtlebot3_burger` in [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations), modified for the correct management of the namespace in both gazebo and ROS2;
 - in the `\params` folder, the files `turtlebot3_burger_bridge_robot1.yaml` and `turtlebot3_burger_bridge_robot2.yaml` were generated. These allow the correct management of the topic bridge, for both robots, from gazebo to ROS2 and vice versa;
 
-#### **`turtlebot3_gazebo`**
+#### **`turtlebot3_autonomous_exploration`**
 Main custom package developed for this project.
 ```bash
 turtlebot3_autonomous_exploration/
