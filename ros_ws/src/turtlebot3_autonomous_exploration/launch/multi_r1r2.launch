@@ -43,15 +43,6 @@ def generate_launch_description():
     declare_use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
 
     # dichiarazione dei file di configurazione RViz per entrambe le istanze dei robot
-    declare_rviz_config_arg_v2 = DeclareLaunchArgument(
-        'rviz_config_path_v2',
-        default_value=os.path.join(pkg_explorer, 'rviz', 'tb3_multi_v2.rviz')
-    )
-
-    declare_rviz_config_arg_v2_robot2 = DeclareLaunchArgument(
-        'rviz_config_path_v2_robot2',
-        default_value=os.path.join(pkg_explorer, 'rviz', 'tb3_multi_v2_robot2.rviz')
-    )
 
     declare_rviz_global_config_arg = DeclareLaunchArgument(
         'rviz_global_config_path',
@@ -131,22 +122,6 @@ def generate_launch_description():
                 parameters=[ekf_params_file_robot1, {'use_sim_time': LaunchConfiguration('use_sim_time')}],
                 remappings=[('/robot1/robot1/odometry/filtered', '/robot1/robot1/odom/filtered')]  # aggiunto per mappare i topic correttamente #TOCHECK
             ),
-
-            # Node commented, but if you want to see what the robot1 does alone, you can decomment.
-
-            # Node(
-            #     package='rviz2',
-            #     executable='rviz2',
-            #     name='rviz2',
-            #     arguments=['-d', LaunchConfiguration('rviz_config_path_v2'), '-f', 'robot1/robot1/map'],
-            #     parameters=[
-            #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            #         {'tf_buffer_size': 100.0},
-            #         {'tf_buffer_cache_size': 100.0},
-            #         {'tf_buffer_duration': 100.0}
-            #     ],
-            #     output='screen'
-            # )
         ]
     )
 
@@ -192,22 +167,6 @@ def generate_launch_description():
                 parameters=[ekf_params_file_robot2, {'use_sim_time': LaunchConfiguration('use_sim_time')}],
                 remappings=[('/robot2/robot2/odometry/filtered', '/robot2/robot2/odom/filtered')]  
             ),
-
-            # Node commented, but if you want to see what the robot2 does alone, you can decomment.
-
-            # Node(
-            #     package='rviz2',
-            #     executable='rviz2',
-            #     name='rviz2',
-            #     arguments=['-d', LaunchConfiguration('rviz_config_path_v2_robot2'), '-f', 'robot2/robot2/map'],
-            #     parameters=[
-            #         {'use_sim_time': LaunchConfiguration('use_sim_time')},
-            #         {'tf_buffer_size': 100.0},
-            #         {'tf_buffer_cache_size': 100.0},
-            #         {'tf_buffer_duration': 100.0}
-            #     ],
-            #     output='screen'
-            # )
         ]
     )
 
@@ -312,8 +271,6 @@ def generate_launch_description():
         declare_x_pose_arg_robot2,
         declare_y_pose_arg_robot2,
         declare_use_sim_time_arg,
-        declare_rviz_config_arg_v2,
-        declare_rviz_config_arg_v2_robot2,
         declare_rviz_global_config_arg,
         gz_sim_server,
         clock_bridge,
