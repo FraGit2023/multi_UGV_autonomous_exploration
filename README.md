@@ -121,6 +121,7 @@ To *__change the initial positions__* of the robots:
   ```bash
   ros_ws/src/turtlebot3_autonomous_exploration/config/robot_initial_positions.yaml
   ```
+  and specify the  same initial positions set in the launch file. This allows the correct functioning of the node that generates the global frame map and, consequently, also of the node that merges the maps.
 
 
 
