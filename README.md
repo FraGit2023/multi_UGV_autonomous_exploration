@@ -93,7 +93,7 @@ To change the simulated world:
   ```bash
   ros_ws/src/turtlebot3_autonomous_exploration/launch/multi_r1r2.launch.py
   ```
-2.On __lines 56 and 57__, two worlds can be chosen: __custom_house.world__ or __turtlebot3_dqn_stage4.world__. Commenting one of the two lines, the world related to the de-commented line will start.
+2.cOn __lines 56 and 57__, two worlds can be chosen: __custom_house.world__ or __turtlebot3_dqn_stage4.world__. Commenting one of the two lines, the world related to the de-commented line will start.
 
 
 
