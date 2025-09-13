@@ -80,7 +80,7 @@ export TURTLEBOT3_MODEL=burger
 cd /root/ros_workspace
 colcon build
 source install/setup.bash
-ros2 launch turtlebot3_autonomous_explorationmulti_r1r2.launch.py
+ros2 launch turtlebot3_autonomous_exploration multi_r1r2.launch.py
 ```
 
 
