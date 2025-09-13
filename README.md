@@ -13,7 +13,8 @@
 ### **`ros_ws/src`** contains:
 
 #### **`turtlebot3_gazebo`** 
-- Forked and adapted from **[ROBOTIS-GIT/turtlebot3_simulations]([https://indirizzo-del-sito.com](https://github.com/ROBOTIS-GIT/turtlebot3_simulations))**
+- Forked and adapted from **[ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations)**
+
 - ciao
 
 
