@@ -13,9 +13,9 @@ robot1/robot1:
         odom_frame: robot1/robot1/odom
         map_frame: robot1/robot1/map
         base_frame: robot1/robot1/base_footprint
-        scan_topic: scan         # questo deve rimanere invariato (scan) per iscriversi al topic /robot1/scan
-        use_sim_time: true       # Assicurati che sia impostato su true se stai usando simulazione
-        map_name: /robot1/robot1/map  # IMPORTANTE :  questo permette di pubblicare la mappa su /robot1/robot1/map
+        scan_topic: scan         # questo deve rimanere invariato (scan) per iscriversi al topic /robot1/robot1/scan
+        use_sim_time: true       
+        map_name: /robot1/robot1/map  # FONDAMENTALE :  questo permette di pubblicare la mappa su /robot1/robot1/map
         # Parametri di mapping
         use_map_saver: true
         mode: mapping
