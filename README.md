@@ -17,7 +17,7 @@
 - Includes robot models and launch files to spawn TurtleBot3 in a Gazebo simulation and establish communication with ROS.
 
 Modifications:
-- in the `/launch` folder, a new file `spawn_turtlebot3_robot2.launch.py` has been created, based on the orginal file `spawn_turtlebot3.launch.py` included in the same folder. The new file allows to spawn the correct model of the robot and the correct bridge file;
+- in the `/launch` folder, a new file `spawn_turtlebot3_robot2.launch.py` has been created, based on the orginal file `spawn_turtlebot3.launch.py` included in the same folder. The new file allows to spawn the correct model of the robot and the usage of correct bridge file;
 - in the `/models/turtlebot3_burger` folder, a new file `model_robot2.sdf` has been created, based on the file `model.sdf`. Both files were generated starting from the original file `model.sdf` contained in the folder  `/models/turtlebot3_burger` in [ROBOTIS-GIT/turtlebot3_simulations](https://github.com/ROBOTIS-GIT/turtlebot3_simulations), modified for the correct management of the namespace in both gazebo and ROS2;
 - in the `\params` folder, the files `turtlebot3_burger_bridge_robot1.yaml` and `turtlebot3_burger_bridge_robot2.yaml` were generated. These allow the correct management of the topic bridge, for both robots, from gazebo to ROS2 and vice versa;
 
