@@ -17,6 +17,7 @@
 - Includes robot models and launch files to spawn TurtleBot3 in a Gazebo simulation and establish communication with ROS.
 
 Modifications:
--
+- Custom launch files
+- Adjusted robot parameters
 
 
