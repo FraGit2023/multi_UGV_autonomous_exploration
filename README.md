@@ -50,10 +50,9 @@ turtlebot3_autonomous_exploration/
 ├── package.xml                                # Package metadata and dependencies
 ├── setup.cfg                                  # Makes package discoverable by ros2 run
 └── setup.py                                   # Installation script
-
-
-
 ```
+
+---
 
 
 
