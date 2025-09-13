@@ -63,6 +63,10 @@ chmod +x build.sh
 ```
 
 > Ensure scripts are executable:
+```bash
+cd ..
+chmod +x run.sh exec.sh chown_me.sh
+```
 
 
 
