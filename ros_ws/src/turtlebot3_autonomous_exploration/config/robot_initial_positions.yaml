@@ -1,9 +1,9 @@
 robot1:
   initial_position:
-    x: -2.0
-    y: -0.5
+    x: -1.0
+    y: 0.0
 
 robot2:
   initial_position:
-    x: -2.0
-    y: 0.5
+    x: 3.0
+    y: 0.0
