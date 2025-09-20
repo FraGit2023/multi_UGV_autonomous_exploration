@@ -149,7 +149,7 @@ You can download the full project documentation (PDF), which includes detailed a
 
 ## 🎥 Simulation Demo
 A demonstration video showcasing the robot performing autonomous exploration across different simulated environments is available below.
-> Please note that the video only displays the simulation within RViz. In addition to the graphical representation of the laser scans, global costmap, and local costmap, it also includes a visualization of the currently detected centroids, rendered as green line segments.
+> Please note that the video only displays the simulation within RViz. In addition to the graphical representation of the laser scans and global costmap, it also includes a visualization of the currently detected centroids, rendered as green line segments.
 These segments are published as Path messages, which RViz visualizes as connected lines. However, the centroid node internally treats them as individual points, with no implied connectivity.
 
 
