@@ -7,7 +7,6 @@ The aim of the project is to continue the work carried out in [turtlebot3-autono
 .
 ├── docker_ws/       # Docker workspace for building the development container
 ├── ros_ws/          # Main ROS 2 workspace containing all custom and third-party packages
-├── docs/            # Documentaton file of the project
 ├── chown_me.sh      # Script to fix ownership of files created as root inside the container
 ├── run.sh           # Script to run the Docker container with correct volumes and permissions
 └── exec.sh          # Script to open a shell into a running container
@@ -146,7 +145,7 @@ bafore running again the simulation.
 # 📦 Extra
 ## 📘 Documentation
 You can download the full project documentation (PDF), which includes detailed architecture, algorithm explanations, and evaluation results: 
-👉 [Download PDF Documentation]([(./docs/documentation.pdf)](https://drive.google.com/file/d/1GyUYKgo1Glq0RZ72mIhddNYe5TFa1dh6/view?usp=sharing))
+👉 [Download PDF Documentation]((https://drive.google.com/file/d/1GyUYKgo1Glq0RZ72mIhddNYe5TFa1dh6/view?usp=sharing))
 
 
 
