@@ -145,8 +145,8 @@ bafore running again the simulation.
 
 # 📦 Extra
 ## 📘 Documentation
-You can download the full project documentation (PDF), which includes detailed architecture, algorithm explanations, and evaluation results:
-👉 [Download PDF Documentation]((./docs/documentation.pdf))
+You can download the full project documentation (PDF), which includes detailed architecture, algorithm explanations, and evaluation results: 
+👉 [Download PDF Documentation]([(./docs/documentation.pdf)](https://drive.google.com/file/d/1GyUYKgo1Glq0RZ72mIhddNYe5TFa1dh6/view?usp=sharing))
 
 
 
