@@ -111,11 +111,11 @@ RViz2 and Gazebo should start and show the simulation in real time.
    > x_pose_robot2 : -2.0  
    > y_pose_robot2 :  0.5
    
-   >
+   > ---
    > **turtlebot3_world.world**  
    > x_pose_robot1 : -2.0  
    > y_pose_robot1 : -0.5  
-   > x_pose_robot2 : -2.0 
+   > x_pose_robot2 : -2.0  
    > y_pose_robot2 :  0.5
      
    > ---
