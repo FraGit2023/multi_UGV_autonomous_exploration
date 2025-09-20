@@ -94,7 +94,7 @@ RViz2 and Gazebo should start and show the simulation in real time.
   ```bash
   ros_ws/src/turtlebot3_autonomous_exploration/launch/multi_r1r2.launch.py
   ```
-2. On __lines 56 and 57__, two worlds can be chosen: __custom_house.world__ or __turtlebot3_dqn_stage4.world__. Commenting one of the two lines, the world related to the de-commented line will start. Be sure to have always one of the two line commented.
+2. On __lines 56-58__, three worlds can be chosen: __custom_house.world__ , __turtlebot3_dqn_stage4.world__ or __turtlebot3_world.world.world__. Commenting one of the three lines, the world related to the de-commented line will start. Be sure to have always one of the two line commented.
 
 ---
 📍 To *__change the initial positions__* of the robots:
@@ -110,13 +110,21 @@ RViz2 and Gazebo should start and show the simulation in real time.
    > y_pose_robot1 : -0.5  
    > x_pose_robot2 : -2.0  
    > y_pose_robot2 :  0.5
+   
+   >
+   > **turtlebot3_world.world**  
+   > x_pose_robot1 : -2.0  
+   > y_pose_robot1 : -0.5  
+   > x_pose_robot2 : -2.0 
+   > y_pose_robot2 :  0.5
      
    > ---
    > **custom_house.world**  
    > x_pose_robot1 : -1.0   
    > y_pose_robot1 : -1.0  
-   > x_pose_robot2 :  3.0  
+   > x_pose_robot2 :  1.0  
    > y_pose_robot2 :  0.0
+ 
 
 3. Go to:
   ```bash
