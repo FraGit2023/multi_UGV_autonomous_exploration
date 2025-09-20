@@ -37,8 +37,8 @@ def generate_launch_description():
     declare_x_pose_arg_robot1 = DeclareLaunchArgument('x_pose_robot1', default_value='-1.0')
     declare_y_pose_arg_robot1 = DeclareLaunchArgument('y_pose_robot1', default_value='0.0')
 
-    declare_x_pose_arg_robot2 = DeclareLaunchArgument('x_pose_robot2', default_value='3.0')
-    declare_y_pose_arg_robot2 = DeclareLaunchArgument('y_pose_robot2', default_value='0.0')
+    declare_x_pose_arg_robot2 = DeclareLaunchArgument('x_pose_robot2', default_value='-1.0')
+    declare_y_pose_arg_robot2 = DeclareLaunchArgument('y_pose_robot2', default_value='-1.0')
 
     declare_use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
 
