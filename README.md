@@ -146,7 +146,7 @@ bafore running again the simulation.
 # 📦 Extra
 ## 📘 Documentation
 You can download the full project documentation (PDF), which includes detailed architecture, algorithm explanations, and evaluation results:
-👉 [Download PDF Documentation]([path/to/your/file.pdf](https://drive.google.com/drive/folders/1JC_hQeTJAfZtZAsrGNrGHgktohTcjNZx?hl=it))
+👉 [Download PDF Documentation]((./docs/documentation.pdf))
 
 
 
