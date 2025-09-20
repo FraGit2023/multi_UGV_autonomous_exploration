@@ -152,6 +152,15 @@ A demonstration video showcasing the robot performing autonomous exploration acr
 > Please note that the video only displays the simulation within RViz. In addition to the graphical representation of the merged map and global merged costmap, it also includes a visualization of the currently detected centroids, rendered as green line segments.
 These segments are published as Path messages, which RViz visualizes as connected lines. However, the centroid node internally treats them as individual points, with no implied connectivity.
 
+👉 Watch on YouTube   
+
+## 🔗 References
+- [TurtleBot3 Documentation](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
+- [Nav2 Stack](https://docs.nav2.org/)
+- [SLAM Toolbox](https://github.com/SteveMacenski/slam_toolbox)
+- [robot_localization Package](https://github.com/cra-ros-pkg/robot_localization)
+
+
 
 
 
