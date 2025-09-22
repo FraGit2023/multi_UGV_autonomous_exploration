@@ -153,7 +153,7 @@ A demonstration video showcasing the robot performing autonomous exploration acr
 These segments are published as Path messages, which RViz visualizes as connected lines. However, the centroid node internally treats them as individual points, with no implied connectivity.
 
 👉 Watch on YouTube the Single-Robot system  
-👉 Watch on YouTube the Mukti-Robot system
+👉 Watch on YouTube the Multi-Robot system
 
 ## 🔗 References
 - [TurtleBot3 Documentation](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
