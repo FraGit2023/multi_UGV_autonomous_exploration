@@ -145,7 +145,7 @@ bafore running again the simulation.
 ## 📦 Extra
 ## 📘 Documentation
 You can download the full project documentation (PDF), which includes detailed architecture, algorithm explanations, and evaluation results:   
-👉 [Download PDF Documentation](https://drive.google.com/file/d/1GyUYKgo1Glq0RZ72mIhddNYe5TFa1dh6/view?usp=sharing)
+👉 [Download PDF Documentation](https://drive.google.com/file/d/1VxjjHcznRsoJ66rrbOlb7tbDZ5zC9wN7/view?usp=sharing)
 
 ## 🎥 Simulation Demo
 A demonstration video showcasing the robot performing autonomous exploration across different simulated environments is available below.
