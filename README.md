@@ -159,6 +159,7 @@ These segments are published as Path messages, which RViz visualizes as connecte
 - [Nav2 Stack](https://docs.nav2.org/)
 - [SLAM Toolbox](https://github.com/SteveMacenski/slam_toolbox)
 - [robot_localization Package](https://github.com/cra-ros-pkg/robot_localization)
+- [Single-Robot Autonomos Exploration System](https://github.com/sltncl/turtlebot3-autonomous-exploration)
 
 
 
